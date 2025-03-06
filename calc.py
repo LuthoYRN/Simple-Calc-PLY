@@ -96,8 +96,10 @@ def p_empty(p):
     p[0]= None
 
 parser = yacc.yacc()
+env = {}
 
-def run(p):
+def run(p): #proccesses AST
+    global env
     if type(p)==tuple:
         if p[0]=='+':
             return run(p[1])+run(p[2])
@@ -106,9 +108,14 @@ def run(p):
         elif p[0]=='*':
             return run(p[1])*run(p[2])
         elif p[0]=='/':
-            return run(p[1])/run(p[2])
+            return run(p[1]) / run(p[2]) if run(p[2]) != 0 else "Error: Division by zero"
         elif p[0]=='=':
-            return (p[1],p[2],p[3])
+            env[p[1]]=run(p[2])
+        elif p[0]=="var":
+            if p[1] not in env:
+                raise ValueError("Undeclared variable found!")
+            else:
+                return env[p[1]]
     else:
         return p
 
@@ -117,4 +124,7 @@ while True:
         s=input('calc> ')
     except EOFError: #CTRLD on keyboard
         break
-    parser.parse(s)
+    try:
+        parser.parse(s)
+    except ValueError as e:
+        print(e)
